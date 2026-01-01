@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>수출공장도단가 계산기</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      padding: 30px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    h3 {
+      margin-top: 25px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+    .container {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 8px;
+      max-width: 720px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    label {
+      flex: 1;
+    }
+    input {
+      width: 140px;
+      padding: 6px;
+      text-align: right;
+    }
+    .unit {
+      margin-left: 8px;
+      width: 80px;
+      color: #555;
+    }
+    button {
+      margin-top: 30px;
+      padding: 12px 25px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 30px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #0a6b2b;
+    }
+  </style>
+</head>
+<body>
+
+<h1>수출공장도단가 계산기</h1>
+
+<div class="container">
+
+  <h3>① 판매단가 / 조정</h3>
+  <div class="row">
+    <label>Gross Unit Price (GRSUPRU)</label>
+    <input type="number" id="grsupru" value="1000">
+    <span class="unit">USD/MT</span>
+  </div>
+
+  <div class="row">
+    <label>Duty Drawback (DTYDRAWU)</label>
+    <input type="number" id="dtydrawu" value="10">
+    <span class="unit">USD/MT</span>
+  </div>
+
+  <h3>② 수출국 물류비</h3>
+  <div class="row">
+    <label>Inland Freight (DINLFTPU)</label>
+    <input type="number" id="dinlftpu" value="80">
+    <span class="unit">USD/MT</span>
+  </div>
+
+  <div class="row">
+    <label>Export Handling (DBROKU)</label>
+    <input type="number" id="dbroku" value="10">
+    <span class="unit">USD/MT</span>
+  </div>
+
+  <h3>③ 국제 / 미국 물류비</h3>
+  <div class="row">
+    <label>International Freight (INTNFRU)</label>
+    <input type="number" id="intnfru" value="100">
+    <span class="unit">USD/MT</span>
+  </div>
+
+  <div class="row">
+    <label>Marine Insurance (MARNINU)</label>
+    <input type="number" id="marninu" value="10">
+    <span class="unit">USD/MT</span>
+  </div>
+
+  <div class="row">
+    <label>US Handling (USBROKU)</label>
+    <input type="number" id="usbroku" value="20">
+    <span class="unit">USD/MT</span>
+  </div>
+
+  <div class="row">
+    <label>US Inland Freight (INLFPWU)</label>
+    <input type="number" id="inlfpwu" value="40">
+    <span class="unit">USD/MT</span>
+  </div>
+
+  <button id="calcBtn">수출공장도단가 계산</button>
+
+  <div class="result" id="result">
+    수출공장도단가 (Net US Unit Price): -
+  </div>
+
+</div>
+
+<script>
+  function calculate() {
+    const grsupru = Number(document.getElementById("grsupru").value);
+    const dtydrawu = Number(document.getElementById("dtydrawu").value);
+
+    const dinlftpu = Number(document.getElementById("dinlftpu").value);
+    const dbroku = Number(document.getElementById("dbroku").value);
+
+    const intnfru = Number(document.getElementById("intnfru").value);
+    const marninu = Number(document.getElementById("marninu").value);
+    const usbroku = Number(document.getElementById("usbroku").value);
+    const inlfpwu = Number(document.getElementById("inlfpwu").value);
+
+    const usgup = grsupru;
+    const usgupadj = dtydrawu;
+    const usdommove = dinlftpu + dbroku;
+    const usintlmove = intnfru + marninu + usbroku + inlfpwu;
+
+    const usnetpri =
+      usgup + usgupadj - usdommove - usintlmove;
+
+    document.getElementById("result").innerText =
+      "수출공장도단가 (Net US Unit Price): " +
+      usnetpri.toLocaleString() + " USD/MT";
+  }
+
+  document.getElementById("calcBtn")
+          .addEventListener("click", calculate);
+</script>
+
+</body>
+</html>
