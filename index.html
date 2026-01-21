@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pricing & Dumping Margin Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 30px;
+    }
+    h1 { margin-bottom: 20px; }
+    h2 {
+      margin-top: 35px;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+    }
+    h3 {
+      margin-top: 25px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 4px;
+    }
+    .container {
+      background: #fff;
+      padding: 25px;
+      border-radius: 8px;
+      max-width: 900px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    label { flex: 1; }
+    input {
+      width: 140px;
+      padding: 6px;
+      text-align: right;
+    }
+    .unit {
+      margin-left: 8px;
+      width: 80px;
+      color: #555;
+    }
+    .box {
+      background: #f9fafb;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+    .result {
+      font-size: 18px;
+      font-weight: bold;
+      color: #0a6b2b;
+      margin-top: 6px;
+    }
+    button {
+      margin-top: 30px;
+      padding: 12px 25px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Pricing / Cost / Dumping Margin Calculator</h1>
+
+<div class="container">
+
+<!-- ================= COST ================= -->
+<h2>① 원가 (COST)</h2>
+
+<h3>제조원가 요소</h3>
+<div class="row"><label>DIRMAT</label><input id="DIRMAT" value="500"><span class="unit">USD/MT</span></div>
+<div class="row"><label>DIRLAB</label><input id="DIRLAB" value="50"><span class="unit">USD/MT</span></div>
+<div class="row"><label>VOH</label><input id="VOH" value="100"><span class="unit">USD/MT</span></div>
+<div class="row"><label>FOH</label><input id="FOH" value="50"><span class="unit">USD/MT</span></div>
+
+<div class="box">
+  <div class="result" id="TOTCOM">TOTCOM: -</div>
+</div>
+
+<h3>간접비 / 금융비</h3>
+<div class="row"><label>GNARatio</label><input id="GNARatio" value="0.10"><span class="unit">Ratio</span></div>
+<div class="row"><label>INTEXRatio</label><input id="INTEXRatio" value="0.01"><span class="unit">Ratio</span></div>
+
+<div class="box">
+  <div class="result" id="GNA">GNA: -</div>
+  <div class="result" id="INTEX">INTEX: -</div>
+  <div class="result" id="COP">COP: -</div>
+</div>
+
+<!-- ================= EXPORT ================= -->
+<h2>② 수출공장도단가 (Export)</h2>
+
+<div class="row"><label>GRSUPRU</label><input id="GRSUPRU" value="1000"><span class="unit">USD/MT</span></div>
+<div class="row"><label>DTYDRAWU</label><input id="DTYDRAWU" value="10"><span class="unit">USD/MT</span></div>
+
+<div class="row"><label>DINLFTPU</label><input id="DINLFTPU" value="80"><span class="unit">USD/MT</span></div>
+<div class="row"><label>DBROKU</label><input id="DBROKU" value="10"><span class="unit">USD/MT</span></div>
+
+<div class="row"><label>INTNFRU</label><input id="INTNFRU" value="100"><span class="unit">USD/MT</span></div>
+<div class="row"><label>MARNINU</label><input id="MARNINU" value="10"><span class="unit">USD/MT</span></div>
+<div class="row"><label>USBROKU</label><input id="USBROKU" value="20"><span class="unit">USD/MT</span></div>
+<div class="row"><label>INLFPWU</label><input id="INLFPWU" value="40"><span class="unit">USD/MT</span></div>
+<div class="row"><label>CREDITU</label><input id="CREDITU" value="20"><span class="unit">USD/MT</span></div>
+
+<div class="box">
+  <div class="result" id="USDOMMOVE">USDOMMOVE: -</div>
+  <div class="result" id="USINTLMOVE">USINTLMOVE: -</div>
+  <div class="result" id="USNETPRI">USNETPRI: -</div>
+</div>
+
+<!-- ================= HOME MARKET ================= -->
+<h2>③ Home Market</h2>
+
+<div class="row"><label>GRSUPRH</label><input id="GRSUPRH" value="900"><span class="unit">USD/MT</span></div>
+<div class="row"><label>INLFTCH</label><input id="INLFTCH" value="50"><span class="unit">USD/MT</span></div>
+<div class="row"><label>CREDITH</label><input id="CREDITH" value="15"><span class="unit">USD/MT</span></div>
+
+<div class="box">
+  <div class="result" id="CMNETPRI">CMNETPRI: -</div>
+  <div class="result" id="CMNPRICOP">CMNPRICOP: -</div>
+</div>
+
+<!-- ================= FINAL ================= -->
+<h2>④ COP / CV / NV / DM</h2>
+<div class="box">
+  <div class="result" id="COPTEST">COPTEST: -</div>
+  <div class="result" id="CV">CV: -</div>
+  <div class="result" id="NV">NV: -</div>
+  <div class="result" id="DM">DM: -</div>
+  <div class="result" id="DMRatio">DMRatio: -</div>
+</div>
+
+<button onclick="calculate()">전체 계산</button>
+
+</div>
+
+<script>
+function v(id){ return Number(document.getElementById(id).value); }
+function s(id,text){ document.getElementById(id).innerText = text; }
+
+function calculate(){
+
+  const TOTCOM = v("DIRMAT")+v("DIRLAB")+v("VOH")+v("FOH");
+  const GNA = TOTCOM*v("GNARatio");
+  const INTEX = TOTCOM*v("INTEXRatio");
+  const COP = TOTCOM+GNA+INTEX;
+
+  s("TOTCOM",`TOTCOM: ${TOTCOM}`);
+  s("GNA",`GNA: ${GNA}`);
+  s("INTEX",`INTEX: ${INTEX}`);
+  s("COP",`COP: ${COP}`);
+
+  const USDOMMOVE = v("DINLFTPU")+v("DBROKU");
+  const USINTLMOVE = v("INTNFRU")+v("MARNINU")+v("USBROKU")+v("INLFPWU");
+  const USNETPRI = v("GRSUPRU")+v("DTYDRAWU")-USDOMMOVE-USINTLMOVE-v("CREDITU");
+
+  s("USDOMMOVE",`USDOMMOVE: ${USDOMMOVE}`);
+  s("USINTLMOVE",`USINTLMOVE: ${USINTLMOVE}`);
+  s("USNETPRI",`USNETPRI: ${USNETPRI}`);
+
+  const CMNETPRI = v("GRSUPRH")-v("INLFTCH")-v("CREDITH");
+  const CMNPRICOP = v("GRSUPRH")-v("INLFTCH");
+
+  s("CMNETPRI",`CMNETPRI: ${CMNETPRI}`);
+  s("CMNPRICOP",`CMNPRICOP: ${CMNPRICOP}`);
+
+  const COPTEST = CMNPRICOP>COP?"Above":"Below";
+  const CV = COP+(CMNPRICOP-COP);
+  const NV = COPTEST==="Above"?CMNETPRI:CV+v("CREDITU");
+  const DM = NV-USNETPRI;
+
+  s("COPTEST",`COPTEST: ${COPTEST}`);
+  s("CV",`CV: ${CV}`);
+  s("NV",`NV: ${NV}`);
+  s("DM",`DM: ${DM}`);
+  s("DMRatio",`DMRatio: ${(DM/USNETPRI).toFixed(4)}`);
+}
+</script>
+
+</body>
+</html>
