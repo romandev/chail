@@ -1,186 +1,694 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>Pricing & Dumping Margin Calculator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      padding: 30px;
-    }
-    h1 { margin-bottom: 20px; }
-    h2 {
-      margin-top: 35px;
-      border-bottom: 2px solid #ccc;
-      padding-bottom: 5px;
-    }
-    h3 {
-      margin-top: 25px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 4px;
-    }
-    .container {
-      background: #fff;
-      padding: 25px;
-      border-radius: 8px;
-      max-width: 900px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    label { flex: 1; }
-    input {
-      width: 140px;
-      padding: 6px;
-      text-align: right;
-    }
-    .unit {
-      margin-left: 8px;
-      width: 80px;
-      color: #555;
-    }
-    .box {
-      background: #f9fafb;
-      padding: 15px;
-      border-radius: 6px;
-      margin-top: 10px;
-    }
-    .result {
-      font-size: 18px;
-      font-weight: bold;
-      color: #0a6b2b;
-      margin-top: 6px;
-    }
-    button {
-      margin-top: 30px;
-      padding: 12px 25px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>덤핑마진 계산기 (Anti-Dumping Margin Calculator)</title>
+<style>
+:root {
+  --primary: #1a365d;
+  --primary-light: #2b6cb0;
+  --accent: #e53e3e;
+  --green: #38a169;
+  --orange: #dd6b20;
+  --bg: #f7fafc;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #2d3748;
+  --text-light: #718096;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.header { background: var(--primary); color: white; padding: 24px 32px; }
+.header h1 { font-size: 1.5rem; font-weight: 600; }
+.header p { color: #a0aec0; font-size: 0.85rem; margin-top: 4px; }
+.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+.section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; }
+.section-head { background: #edf2f7; padding: 12px 20px; font-weight: 600; font-size: 0.95rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+.section-head:hover { background: #e2e8f0; }
+.section-head .toggle { font-size: 0.8rem; color: var(--text-light); }
+.section-body { padding: 16px 20px; }
+.section-body.collapsed { display: none; }
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 0.8rem; color: var(--text-light); font-weight: 500; }
+.field input, .field select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; }
+.field input:focus, .field select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 2px rgba(43,108,176,0.15); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { background: #edf2f7; padding: 8px 6px; text-align: center; font-weight: 600; font-size: 0.75rem; white-space: nowrap; border: 1px solid var(--border); }
+td { padding: 4px 4px; border: 1px solid var(--border); text-align: center; }
+td input, td select { width: 100%; padding: 5px 4px; border: 1px solid transparent; border-radius: 3px; text-align: center; font-size: 0.85rem; background: transparent; }
+td input:hover, td select:hover { border-color: var(--border); }
+td input:focus, td select:focus { outline: none; border-color: var(--primary-light); background: white; }
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 500; }
+.btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-danger { background: var(--accent); color: white; }
+.btn-danger:hover { background: #c53030; }
+.btn-add { background: #ebf8ff; color: var(--primary-light); border: 1px dashed var(--primary-light); }
+.btn-add:hover { background: #bee3f8; }
+.btn-row { display: flex; gap: 8px; margin-top: 12px; }
+.calc-btn { display: block; width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: var(--radius); font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-bottom: 24px; }
+.calc-btn:hover { background: var(--primary-light); }
+
+/* Results */
+#results { display: none; }
+.result-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
+.result-card-head { padding: 12px 16px; font-weight: 600; font-size: 0.9rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.result-card-body { padding: 16px; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.tag-pass { background: #c6f6d5; color: #276749; }
+.tag-fail { background: #fed7d7; color: #9b2c2c; }
+.tag-dumping { background: #fed7d7; color: #9b2c2c; }
+.tag-nodumping { background: #c6f6d5; color: #276749; }
+.tag-ep { background: #bee3f8; color: #2a4365; }
+.tag-cep { background: #fefcbf; color: #744210; }
+.tag-identical { background: #e9d8fd; color: #553c9a; }
+.tag-similar { background: #feebc8; color: #7b341e; }
+.tag-nomatch { background: #fed7d7; color: #9b2c2c; }
+.calc-chain { font-family: 'Courier New', monospace; font-size: 0.82rem; background: #f7fafc; padding: 12px; border-radius: 4px; border: 1px solid var(--border); margin: 8px 0; line-height: 1.8; }
+.calc-chain .label { color: var(--text-light); }
+.calc-chain .val { color: var(--primary); font-weight: 600; }
+.calc-chain .op { color: var(--accent); }
+.calc-chain .result { color: var(--green); font-weight: 700; }
+.summary-table { width: 100%; }
+.summary-table th { background: var(--primary); color: white; padding: 10px 8px; }
+.summary-table td { padding: 10px 8px; }
+.summary-table tr:nth-child(even) { background: #f7fafc; }
+.wadm-box { background: var(--primary); color: white; border-radius: var(--radius); padding: 24px; text-align: center; margin-top: 16px; }
+.wadm-box .wadm-label { font-size: 0.9rem; opacity: 0.8; }
+.wadm-box .wadm-value { font-size: 2.5rem; font-weight: 700; margin: 8px 0; }
+.wadm-box .wadm-detail { font-size: 0.85rem; opacity: 0.7; }
+.sub-table { width: 100%; margin: 8px 0; }
+.sub-table th { background: #edf2f7; font-size: 0.75rem; padding: 6px; }
+.sub-table td { font-size: 0.82rem; padding: 6px; }
+.note { font-size: 0.78rem; color: var(--text-light); margin-top: 8px; }
+.del-btn { background: none; border: none; color: #e53e3e; cursor: pointer; font-size: 1rem; padding: 2px 6px; }
+.del-btn:hover { background: #fed7d7; border-radius: 3px; }
+</style>
 </head>
 <body>
 
-<h1>Pricing / Cost / Dumping Margin Calculator</h1>
+<div class="header">
+  <h1>Anti-Dumping Margin Calculator</h1>
+  <p>US DOC 방식 덤핑마진 계산기 | EP/CEP, COP Test, ALT Test, CV, NV, Zeroing, WADM</p>
+</div>
 
 <div class="container">
 
-<!-- ================= COST ================= -->
-<h2>① 원가 (COST)</h2>
-
-<h3>제조원가 요소</h3>
-<div class="row"><label>DIRMAT</label><input id="DIRMAT" value="500"><span class="unit">USD/MT</span></div>
-<div class="row"><label>DIRLAB</label><input id="DIRLAB" value="50"><span class="unit">USD/MT</span></div>
-<div class="row"><label>VOH</label><input id="VOH" value="100"><span class="unit">USD/MT</span></div>
-<div class="row"><label>FOH</label><input id="FOH" value="50"><span class="unit">USD/MT</span></div>
-
-<div class="box">
-  <div class="result" id="TOTCOM">TOTCOM: -</div>
+<!-- Global Settings -->
+<div class="section">
+  <div class="section-head" onclick="toggleSection(this)">
+    <span>1. 공통 설정 (Global Settings)</span>
+    <span class="toggle">접기/펼치기</span>
+  </div>
+  <div class="section-body">
+    <div class="settings-grid">
+      <div class="field">
+        <label>일반관리비율 (G&A Ratio) %</label>
+        <input type="number" id="GNARatio" value="10" step="0.1">
+      </div>
+      <div class="field">
+        <label>순이자비용율 (Interest Expense Ratio) %</label>
+        <input type="number" id="INTEXRatio" value="1" step="0.1">
+      </div>
+      <div class="field">
+        <label>CEP 이윤율 (CEP Profit Ratio) %</label>
+        <input type="number" id="CEPProfitRatio" value="10" step="0.1">
+      </div>
+    </div>
+  </div>
 </div>
 
-<h3>간접비 / 금융비</h3>
-<div class="row"><label>GNARatio</label><input id="GNARatio" value="0.10"><span class="unit">Ratio</span></div>
-<div class="row"><label>INTEXRatio</label><input id="INTEXRatio" value="0.01"><span class="unit">Ratio</span></div>
-
-<div class="box">
-  <div class="result" id="GNA">GNA: -</div>
-  <div class="result" id="INTEX">INTEX: -</div>
-  <div class="result" id="COP">COP: -</div>
+<!-- Cost Data -->
+<div class="section">
+  <div class="section-head" onclick="toggleSection(this)">
+    <span>2. 원가 데이터 (Cost Data)</span>
+    <span class="toggle">접기/펼치기</span>
+  </div>
+  <div class="section-body">
+    <div class="table-wrap">
+      <table id="costTable">
+        <thead><tr>
+          <th></th>
+          <th>CONNUM</th>
+          <th>생산중량<br>(PRODQTU)<br>MT</th>
+          <th>직접재료비<br>(DIRMAT)<br>USD/MT</th>
+          <th>직접노무비<br>(DIRLAB)<br>USD/MT</th>
+          <th>변동제조간접비<br>(VOH)<br>USD/MT</th>
+          <th>고정제조간접비<br>(FOH)<br>USD/MT</th>
+        </tr></thead>
+        <tbody id="costBody"></tbody>
+      </table>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-add" onclick="addCostRow()">+ 행 추가</button>
+    </div>
+  </div>
 </div>
 
-<!-- ================= EXPORT ================= -->
-<h2>② 수출공장도단가 (Export)</h2>
-
-<div class="row"><label>GRSUPRU</label><input id="GRSUPRU" value="1000"><span class="unit">USD/MT</span></div>
-<div class="row"><label>DTYDRAWU</label><input id="DTYDRAWU" value="10"><span class="unit">USD/MT</span></div>
-
-<div class="row"><label>DINLFTPU</label><input id="DINLFTPU" value="80"><span class="unit">USD/MT</span></div>
-<div class="row"><label>DBROKU</label><input id="DBROKU" value="10"><span class="unit">USD/MT</span></div>
-
-<div class="row"><label>INTNFRU</label><input id="INTNFRU" value="100"><span class="unit">USD/MT</span></div>
-<div class="row"><label>MARNINU</label><input id="MARNINU" value="10"><span class="unit">USD/MT</span></div>
-<div class="row"><label>USBROKU</label><input id="USBROKU" value="20"><span class="unit">USD/MT</span></div>
-<div class="row"><label>INLFPWU</label><input id="INLFPWU" value="40"><span class="unit">USD/MT</span></div>
-<div class="row"><label>CREDITU</label><input id="CREDITU" value="20"><span class="unit">USD/MT</span></div>
-
-<div class="box">
-  <div class="result" id="USDOMMOVE">USDOMMOVE: -</div>
-  <div class="result" id="USINTLMOVE">USINTLMOVE: -</div>
-  <div class="result" id="USNETPRI">USNETPRI: -</div>
+<!-- Home Market Data -->
+<div class="section">
+  <div class="section-head" onclick="toggleSection(this)">
+    <span>3. 내수 데이터 (Home Market Data)</span>
+    <span class="toggle">접기/펼치기</span>
+  </div>
+  <div class="section-body">
+    <div class="table-wrap">
+      <table id="hmTable">
+        <thead><tr>
+          <th></th>
+          <th>CONNUM</th>
+          <th>중량<br>(QTYH)<br>MT</th>
+          <th>내수판매단가<br>(GRSUPRH)<br>USD/MT</th>
+          <th>내륙운임<br>(INLFTCH)<br>USD/MT</th>
+          <th>신용비<br>(CREDITH)<br>USD/MT</th>
+          <th>거래관계<br>(CUSRELH)</th>
+          <th>시장가격<br>(MktPrice)<br>USD/MT</th>
+        </tr></thead>
+        <tbody id="hmBody"></tbody>
+      </table>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-add" onclick="addHmRow()">+ 행 추가</button>
+    </div>
+    <p class="note">* 거래관계: U=비관계(Unrelated), R=관계(Related). 관계거래 시 시장가격 입력 필요.</p>
+  </div>
 </div>
 
-<!-- ================= HOME MARKET ================= -->
-<h2>③ Home Market</h2>
-
-<div class="row"><label>GRSUPRH</label><input id="GRSUPRH" value="900"><span class="unit">USD/MT</span></div>
-<div class="row"><label>INLFTCH</label><input id="INLFTCH" value="50"><span class="unit">USD/MT</span></div>
-<div class="row"><label>CREDITH</label><input id="CREDITH" value="15"><span class="unit">USD/MT</span></div>
-
-<div class="box">
-  <div class="result" id="CMNETPRI">CMNETPRI: -</div>
-  <div class="result" id="CMNPRICOP">CMNPRICOP: -</div>
+<!-- Export Data -->
+<div class="section">
+  <div class="section-head" onclick="toggleSection(this)">
+    <span>4. 수출 데이터 (Export Data)</span>
+    <span class="toggle">접기/펼치기</span>
+  </div>
+  <div class="section-body">
+    <div class="table-wrap">
+      <table id="exportTable">
+        <thead><tr>
+          <th></th>
+          <th>CONNUM</th>
+          <th>판매타입<br>(SALEU)</th>
+          <th>중량<br>(QTYU)<br>MT</th>
+          <th>판매단가<br>(GRSUPRU)<br>USD/MT</th>
+          <th>내륙운임<br>(DINLFTPU)<br>USD/MT</th>
+          <th>수출핸들링<br>(DBROKU)<br>USD/MT</th>
+          <th>수입핸들링<br>(USBROKU)<br>USD/MT</th>
+          <th>해상운임<br>(INTNFRU)<br>USD/MT</th>
+          <th>해상보험<br>(MARNINU)<br>USD/MT</th>
+          <th>현지내륙운임<br>(INLFPWU)<br>USD/MT</th>
+          <th>관세환급<br>(DTYDRAWU)<br>USD/MT</th>
+          <th>신용비<br>(CREDITU)<br>USD/MT</th>
+          <th>은행수수료<br>(BANKCHARU)<br>USD/MT</th>
+          <th>기타직접판매비<br>(DIRSELU)<br>USD/MT</th>
+          <th>미국재고비용<br>(INVCARU)<br>USD/MT</th>
+          <th>미국간접판매비<br>(INDIRSU)<br>USD/MT</th>
+        </tr></thead>
+        <tbody id="exportBody"></tbody>
+      </table>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-add" onclick="addExportRow()">+ 행 추가</button>
+    </div>
+    <p class="note">* EP: Export Price (수출가격), CEP: Constructed Export Price (구성수출가격). CEP는 미국 내 재판매 시 적용.</p>
+  </div>
 </div>
 
-<!-- ================= FINAL ================= -->
-<h2>④ COP / CV / NV / DM</h2>
-<div class="box">
-  <div class="result" id="COPTEST">COPTEST: -</div>
-  <div class="result" id="CV">CV: -</div>
-  <div class="result" id="NV">NV: -</div>
-  <div class="result" id="DM">DM: -</div>
-  <div class="result" id="DMRatio">DMRatio: -</div>
-</div>
+<button class="calc-btn" onclick="calculate()">계산하기 (Calculate)</button>
 
-<button onclick="calculate()">전체 계산</button>
+<!-- Results -->
+<div id="results">
+  <div id="resultContent"></div>
+</div>
 
 </div>
 
 <script>
-function v(id){ return Number(document.getElementById(id).value); }
-function s(id,text){ document.getElementById(id).innerText = text; }
+// === Default Tutorial Data ===
+const defaultCost = [
+  { connum:'A0', prodqtu:30, dirmat:500, dirlab:50, voh:100, foh:50 },
+  { connum:'B0', prodqtu:30, dirmat:560, dirlab:60, voh:90, foh:29 },
+  { connum:'C0', prodqtu:30, dirmat:520, dirlab:55, voh:90, foh:38 },
+  { connum:'C1', prodqtu:30, dirmat:500, dirlab:55, voh:90, foh:38 },
+  { connum:'D0', prodqtu:30, dirmat:600, dirlab:65, voh:100, foh:46 },
+];
+const defaultHm = [
+  { connumh:'A0', qtyh:10, grsuprh:900, inlftch:50, credith:15, cusrelh:'U', mktprice:0 },
+  { connumh:'B0', qtyh:10, grsuprh:800, inlftch:40, credith:20, cusrelh:'U', mktprice:0 },
+  { connumh:'C1', qtyh:10, grsuprh:950, inlftch:45, credith:25, cusrelh:'U', mktprice:0 },
+  { connumh:'D0', qtyh:10, grsuprh:990, inlftch:50, credith:20, cusrelh:'R', mktprice:1000 },
+];
+const defaultExport = [
+  { connumu:'A0', saleu:'EP',  qtyu:10, grsupru:1000, dinlftpu:80,  dbroku:10, usbroku:20, intnfru:100, marninu:10, inlfpwu:40, dtydrawu:10, creditu:20, bankcharu:0, dirselu:0, invcaru:0,  indirsu:0 },
+  { connumu:'B0', saleu:'CEP', qtyu:10, grsupru:1350, dinlftpu:90,  dbroku:15, usbroku:20, intnfru:120, marninu:12, inlfpwu:38, dtydrawu:0,  creditu:25, bankcharu:2, dirselu:5, invcaru:18, indirsu:90 },
+  { connumu:'C0', saleu:'CEP', qtyu:10, grsupru:1370, dinlftpu:85,  dbroku:12, usbroku:20, intnfru:110, marninu:11, inlfpwu:34, dtydrawu:0,  creditu:30, bankcharu:3, dirselu:7, invcaru:20, indirsu:70 },
+  { connumu:'D0', saleu:'CEP', qtyu:10, grsupru:1450, dinlftpu:95,  dbroku:15, usbroku:25, intnfru:130, marninu:13, inlfpwu:40, dtydrawu:0,  creditu:35, bankcharu:4, dirselu:6, invcaru:25, indirsu:90 },
+];
 
-function calculate(){
-
-  const TOTCOM = v("DIRMAT")+v("DIRLAB")+v("VOH")+v("FOH");
-  const GNA = TOTCOM*v("GNARatio");
-  const INTEX = TOTCOM*v("INTEXRatio");
-  const COP = TOTCOM+GNA+INTEX;
-
-  s("TOTCOM",`TOTCOM: ${TOTCOM}`);
-  s("GNA",`GNA: ${GNA}`);
-  s("INTEX",`INTEX: ${INTEX}`);
-  s("COP",`COP: ${COP}`);
-
-  const USDOMMOVE = v("DINLFTPU")+v("DBROKU");
-  const USINTLMOVE = v("INTNFRU")+v("MARNINU")+v("USBROKU")+v("INLFPWU");
-  const USNETPRI = v("GRSUPRU")+v("DTYDRAWU")-USDOMMOVE-USINTLMOVE-v("CREDITU");
-
-  s("USDOMMOVE",`USDOMMOVE: ${USDOMMOVE}`);
-  s("USINTLMOVE",`USINTLMOVE: ${USINTLMOVE}`);
-  s("USNETPRI",`USNETPRI: ${USNETPRI}`);
-
-  const CMNETPRI = v("GRSUPRH")-v("INLFTCH")-v("CREDITH");
-  const CMNPRICOP = v("GRSUPRH")-v("INLFTCH");
-
-  s("CMNETPRI",`CMNETPRI: ${CMNETPRI}`);
-  s("CMNPRICOP",`CMNPRICOP: ${CMNPRICOP}`);
-
-  const COPTEST = CMNPRICOP>COP?"Above":"Below";
-  const CV = COP+(CMNPRICOP-COP);
-  const NV = COPTEST==="Above"?CMNETPRI:CV+v("CREDITU");
-  const DM = NV-USNETPRI;
-
-  s("COPTEST",`COPTEST: ${COPTEST}`);
-  s("CV",`CV: ${CV}`);
-  s("NV",`NV: ${NV}`);
-  s("DM",`DM: ${DM}`);
-  s("DMRatio",`DMRatio: ${(DM/USNETPRI).toFixed(4)}`);
+// === UI Helpers ===
+function toggleSection(el) {
+  el.nextElementSibling.classList.toggle('collapsed');
 }
-</script>
 
+function fmt(v, d=2) {
+  if (v === null || v === undefined || isNaN(v)) return '-';
+  return Number(v).toFixed(d);
+}
+function fmtPct(v) {
+  if (v === null || v === undefined || isNaN(v)) return '-';
+  return (v * 100).toFixed(2) + '%';
+}
+function fmtInt(v) {
+  if (v === null || v === undefined || isNaN(v)) return '-';
+  return Number(v).toFixed(0);
+}
+
+// === Cost Table ===
+function addCostRow(d) {
+  const tbody = document.getElementById('costBody');
+  const tr = document.createElement('tr');
+  const data = d || { connum:'', prodqtu:30, dirmat:0, dirlab:0, voh:0, foh:0 };
+  tr.innerHTML = `
+    <td><button class="del-btn" onclick="this.closest('tr').remove()">&times;</button></td>
+    <td><input type="text" value="${data.connum}" data-f="connum"></td>
+    <td><input type="number" value="${data.prodqtu}" data-f="prodqtu"></td>
+    <td><input type="number" value="${data.dirmat}" data-f="dirmat"></td>
+    <td><input type="number" value="${data.dirlab}" data-f="dirlab"></td>
+    <td><input type="number" value="${data.voh}" data-f="voh"></td>
+    <td><input type="number" value="${data.foh}" data-f="foh"></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// === Home Market Table ===
+function addHmRow(d) {
+  const tbody = document.getElementById('hmBody');
+  const tr = document.createElement('tr');
+  const data = d || { connumh:'', qtyh:10, grsuprh:0, inlftch:0, credith:0, cusrelh:'U', mktprice:0 };
+  const selU = data.cusrelh === 'U' ? 'selected' : '';
+  const selR = data.cusrelh === 'R' ? 'selected' : '';
+  tr.innerHTML = `
+    <td><button class="del-btn" onclick="this.closest('tr').remove()">&times;</button></td>
+    <td><input type="text" value="${data.connumh}" data-f="connumh"></td>
+    <td><input type="number" value="${data.qtyh}" data-f="qtyh"></td>
+    <td><input type="number" value="${data.grsuprh}" data-f="grsuprh"></td>
+    <td><input type="number" value="${data.inlftch}" data-f="inlftch"></td>
+    <td><input type="number" value="${data.credith}" data-f="credith"></td>
+    <td><select data-f="cusrelh"><option value="U" ${selU}>U (비관계)</option><option value="R" ${selR}>R (관계)</option></select></td>
+    <td><input type="number" value="${data.mktprice}" data-f="mktprice" step="0.01"></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// === Export Table ===
+function addExportRow(d) {
+  const tbody = document.getElementById('exportBody');
+  const tr = document.createElement('tr');
+  const data = d || { connumu:'', saleu:'EP', qtyu:10, grsupru:0, dinlftpu:0, dbroku:0, usbroku:0, intnfru:0, marninu:0, inlfpwu:0, dtydrawu:0, creditu:0, bankcharu:0, dirselu:0, invcaru:0, indirsu:0 };
+  const selEP = data.saleu === 'EP' ? 'selected' : '';
+  const selCEP = data.saleu === 'CEP' ? 'selected' : '';
+  tr.innerHTML = `
+    <td><button class="del-btn" onclick="this.closest('tr').remove()">&times;</button></td>
+    <td><input type="text" value="${data.connumu}" data-f="connumu"></td>
+    <td><select data-f="saleu"><option value="EP" ${selEP}>EP</option><option value="CEP" ${selCEP}>CEP</option></select></td>
+    <td><input type="number" value="${data.qtyu}" data-f="qtyu"></td>
+    <td><input type="number" value="${data.grsupru}" data-f="grsupru"></td>
+    <td><input type="number" value="${data.dinlftpu}" data-f="dinlftpu"></td>
+    <td><input type="number" value="${data.dbroku}" data-f="dbroku"></td>
+    <td><input type="number" value="${data.usbroku}" data-f="usbroku"></td>
+    <td><input type="number" value="${data.intnfru}" data-f="intnfru"></td>
+    <td><input type="number" value="${data.marninu}" data-f="marninu"></td>
+    <td><input type="number" value="${data.inlfpwu}" data-f="inlfpwu"></td>
+    <td><input type="number" value="${data.dtydrawu}" data-f="dtydrawu"></td>
+    <td><input type="number" value="${data.creditu}" data-f="creditu"></td>
+    <td><input type="number" value="${data.bankcharu}" data-f="bankcharu"></td>
+    <td><input type="number" value="${data.dirselu}" data-f="dirselu"></td>
+    <td><input type="number" value="${data.invcaru}" data-f="invcaru"></td>
+    <td><input type="number" value="${data.indirsu}" data-f="indirsu"></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+// === Read Data ===
+function readTableData(tbodyId) {
+  const rows = document.querySelectorAll(`#${tbodyId} tr`);
+  return Array.from(rows).map(tr => {
+    const obj = {};
+    tr.querySelectorAll('[data-f]').forEach(el => {
+      const f = el.dataset.f;
+      if (el.tagName === 'SELECT' || el.type === 'text') {
+        obj[f] = el.value.trim();
+      } else {
+        obj[f] = parseFloat(el.value) || 0;
+      }
+    });
+    return obj;
+  });
+}
+
+// === Main Calculate ===
+function calculate() {
+  const GNARatio = (parseFloat(document.getElementById('GNARatio').value) || 0) / 100;
+  const INTEXRatio = (parseFloat(document.getElementById('INTEXRatio').value) || 0) / 100;
+  const CEPProfitRatio = (parseFloat(document.getElementById('CEPProfitRatio').value) || 0) / 100;
+
+  const costEntries = readTableData('costBody');
+  const hmEntries = readTableData('hmBody');
+  const exportEntries = readTableData('exportBody');
+
+  // --- Step 1: Cost Metrics ---
+  const costMap = {};
+  costEntries.forEach(c => {
+    c.VCOM = c.dirmat + c.dirlab + c.voh;
+    c.TOTCOM = c.VCOM + c.foh;
+    c.GNA = c.TOTCOM * GNARatio;
+    c.INTEX = c.TOTCOM * INTEXRatio;
+    c.COP = c.TOTCOM + c.GNA + c.INTEX;
+    costMap[c.connum] = c;
+  });
+
+  // --- Step 2: Home Market Metrics ---
+  const hmMap = {};
+  hmEntries.forEach(h => {
+    h.CMGUP = h.grsuprh;
+    h.CMMOVE = h.inlftch;
+    h.CMCRED = h.credith;
+    h.CMNETPRI = h.CMGUP - h.CMMOVE - h.CMCRED;
+    h.CMNPRICOP = h.CMGUP - h.CMMOVE;
+    hmMap[h.connumh] = h;
+  });
+
+  // --- Step 3: OCT Test ---
+  hmEntries.forEach(h => {
+    const cost = costMap[h.connumh];
+    h.COPTResult = (cost && h.CMNPRICOP > cost.COP) ? 'Pass' : 'Fail';
+    if (!cost) h.COPTResult = 'N/A';
+
+    if (h.cusrelh === 'U') {
+      h.ALTRatio = null;
+      h.ALTResult = 'Pass';
+    } else {
+      h.ALTRatio = h.mktprice > 0 ? h.CMNPRICOP / h.mktprice : 0;
+      h.ALTResult = (h.ALTRatio >= 0.98 && h.ALTRatio <= 1.02) ? 'Pass' : 'Fail';
+    }
+    h.OCTTResult = (h.COPTResult === 'Pass' && h.ALTResult === 'Pass') ? 'Pass' : 'Fail';
+  });
+
+  // --- Step 4: CV Profit Ratio ---
+  let sumProfitAM = 0, sumCOPAM = 0;
+  hmEntries.forEach(h => {
+    const cost = costMap[h.connumh];
+    if (h.OCTTResult === 'Pass' && cost) {
+      h.OCTCVProfitAM = (h.CMNETPRI - cost.COP) * h.qtyh;
+      h.OCTCOPAM = cost.COP * h.qtyh;
+    } else {
+      h.OCTCVProfitAM = 0;
+      h.OCTCOPAM = 0;
+    }
+    sumProfitAM += h.OCTCVProfitAM;
+    sumCOPAM += h.OCTCOPAM;
+  });
+  const CVPROFITRatio = sumCOPAM > 0 ? sumProfitAM / sumCOPAM : 0;
+
+  // --- Step 5: CV ---
+  costEntries.forEach(c => {
+    c.CVPROFIT = c.COP * CVPROFITRatio;
+    c.CV = c.COP + c.CVPROFIT;
+  });
+
+  // --- Step 6: Export Metrics & NV & DM ---
+  exportEntries.forEach(e => {
+    const cost = costMap[e.connumu];
+    e.USGUP = e.grsupru;
+    e.USGUPADJ = e.dtydrawu;
+    e.USDOMMOVE = e.dinlftpu + e.dbroku;
+    e.USINTLMOVE = e.intnfru + e.marninu + e.usbroku + e.inlfpwu;
+    e.USDIRSELL = e.creditu + e.invcaru + e.bankcharu + e.dirselu;
+    e.USINDSELL = e.indirsu;
+
+    if (e.saleu === 'EP') {
+      e.CEPProfit = 0;
+      e.USNETPRI = e.USGUP + e.USGUPADJ - e.USDOMMOVE - e.USINTLMOVE;
+    } else {
+      e.CEPProfit = (e.USDIRSELL + e.USINDSELL) * CEPProfitRatio;
+      e.USNETPRI = e.USGUP + e.USGUPADJ - e.USDOMMOVE - e.USINTLMOVE - e.USDIRSELL - e.USINDSELL - e.CEPProfit;
+    }
+
+    // Matching
+    e.matchType = null;
+    e.matchedHM = null;
+    e.matchedConnum = null;
+
+    if (hmMap[e.connumu]) {
+      e.matchType = 'IDENTICAL';
+      e.matchedHM = hmMap[e.connumu];
+      e.matchedConnum = e.connumu;
+    } else {
+      const fl = e.connumu.charAt(0);
+      let best = null, bestDiff = Infinity;
+      hmEntries.forEach(h => {
+        if (h.connumh.charAt(0) === fl && h.connumh !== e.connumu) {
+          const hc = costMap[h.connumh], ec = costMap[e.connumu];
+          if (hc && ec) {
+            const d = Math.abs(ec.VCOM - hc.VCOM);
+            if (d < bestDiff) { bestDiff = d; best = h; }
+          }
+        }
+      });
+      if (best) {
+        e.matchType = 'SIMILAR';
+        e.matchedHM = best;
+        e.matchedConnum = best.connumh;
+      }
+    }
+
+    // DIFMER
+    e.DIFMER = 0; e.DIFFRatio = 0; e.DIFFMERT = 'N/A';
+    if (e.matchType === 'SIMILAR') {
+      const ec = costMap[e.connumu], hc = costMap[e.matchedConnum];
+      if (ec && hc) {
+        e.DIFMER = ec.VCOM - hc.VCOM;
+        e.DIFFRatio = Math.abs(e.DIFMER) / ec.TOTCOM;
+        e.DIFFMERT = e.DIFFRatio < 0.20 ? 'Pass' : 'Fail';
+      }
+    }
+
+    // NV
+    if (e.matchedHM) {
+      if (e.matchedHM.OCTTResult === 'Pass') {
+        e.NVBasis = e.matchedHM.CMNETPRI;
+        e.NVSource = 'CMNETPRI';
+      } else {
+        e.NVBasis = cost ? cost.CV : 0;
+        e.NVSource = 'CV';
+      }
+    } else {
+      e.NVBasis = cost ? cost.CV : 0;
+      e.NVSource = 'CV';
+      e.matchType = 'NO_MATCH';
+    }
+
+    e.NVEPAdj = (e.saleu === 'EP') ? e.creditu : 0;
+    e.NVSIMAdj = (e.matchType === 'SIMILAR' && e.DIFFMERT === 'Pass') ? e.DIFMER : 0;
+    e.NV = e.NVBasis + e.NVEPAdj + e.NVSIMAdj;
+
+    // DM
+    e.DM = e.NV - e.USNETPRI;
+    e.DMRatio = e.USNETPRI !== 0 ? e.DM / e.USNETPRI : 0;
+    e.DMResult = e.DM > 0 ? 'Dumping' : 'No Dumping';
+    e.DMZeroing = Math.max(e.DM, 0);
+  });
+
+  // --- Step 7: WADM ---
+  let TOTDA = 0, TOTSV = 0;
+  exportEntries.forEach(e => {
+    TOTDA += e.DMZeroing * e.qtyu;
+    TOTSV += e.USNETPRI * e.qtyu;
+  });
+  const WADM = TOTSV > 0 ? TOTDA / TOTSV : 0;
+
+  // --- Render ---
+  renderResults(exportEntries, hmEntries, costEntries, costMap, CVPROFITRatio, TOTDA, TOTSV, WADM);
+}
+
+// === Render Results ===
+function renderResults(exps, hms, costs, costMap, CVPROFITRatio, TOTDA, TOTSV, WADM) {
+  const el = document.getElementById('resultContent');
+  let html = '';
+
+  // --- Cost Summary ---
+  html += `<div class="result-card">
+    <div class="result-card-head" style="background:#edf2f7">원가 계산 결과 (Cost Calculation)</div>
+    <div class="result-card-body"><div class="table-wrap">
+    <table class="sub-table"><thead><tr>
+      <th>CONNUM</th><th>DIRMAT</th><th>DIRLAB</th><th>VOH</th><th>FOH</th>
+      <th>VCOM</th><th>TOTCOM</th><th>GNA</th><th>INTEX</th><th>COP</th><th>CVPROFIT</th><th>CV</th>
+    </tr></thead><tbody>`;
+  costs.forEach(c => {
+    html += `<tr><td><b>${c.connum}</b></td><td>${fmtInt(c.dirmat)}</td><td>${fmtInt(c.dirlab)}</td>
+      <td>${fmtInt(c.voh)}</td><td>${fmtInt(c.foh)}</td>
+      <td>${fmtInt(c.VCOM)}</td><td>${fmtInt(c.TOTCOM)}</td><td>${fmt(c.GNA)}</td><td>${fmt(c.INTEX)}</td>
+      <td><b>${fmt(c.COP)}</b></td><td>${fmt(c.CVPROFIT)}</td><td><b>${fmt(c.CV)}</b></td></tr>`;
+  });
+  html += `</tbody></table></div>
+    <p class="note">CV Profit Ratio = ${fmtPct(CVPROFITRatio)} (OCT Pass 내수 거래로부터 산출)</p>
+  </div></div>`;
+
+  // --- HM Summary ---
+  html += `<div class="result-card">
+    <div class="result-card-head" style="background:#edf2f7">내수 OCT 테스트 결과 (Home Market OCT Test)</div>
+    <div class="result-card-body"><div class="table-wrap">
+    <table class="sub-table"><thead><tr>
+      <th>CONNUM</th><th>CMGUP</th><th>CMMOVE</th><th>CMCRED</th><th>CMNETPRI</th><th>CMNPRICOP</th>
+      <th>COP</th><th>COP Test</th><th>거래관계</th><th>ALT Ratio</th><th>ALT Test</th><th>OCT Result</th>
+    </tr></thead><tbody>`;
+  hms.forEach(h => {
+    const cost = costMap[h.connumh];
+    const copVal = cost ? fmt(cost.COP) : '-';
+    const altR = h.ALTRatio !== null ? fmtPct(h.ALTRatio) : 'N/A';
+    const tagCOP = h.COPTResult === 'Pass' ? 'tag-pass' : 'tag-fail';
+    const tagALT = h.ALTResult === 'Pass' ? 'tag-pass' : 'tag-fail';
+    const tagOCT = h.OCTTResult === 'Pass' ? 'tag-pass' : 'tag-fail';
+    html += `<tr><td><b>${h.connumh}</b></td><td>${fmtInt(h.CMGUP)}</td><td>${fmtInt(h.CMMOVE)}</td>
+      <td>${fmtInt(h.CMCRED)}</td><td><b>${fmtInt(h.CMNETPRI)}</b></td><td>${fmtInt(h.CMNPRICOP)}</td>
+      <td>${copVal}</td><td><span class="tag ${tagCOP}">${h.COPTResult}</span></td>
+      <td>${h.cusrelh}</td><td>${altR}</td>
+      <td><span class="tag ${tagALT}">${h.ALTResult}</span></td>
+      <td><span class="tag ${tagOCT}">${h.OCTTResult}</span></td></tr>`;
+  });
+  html += `</tbody></table></div></div></div>`;
+
+  // --- Per-export detail ---
+  exps.forEach(e => {
+    const matchTag = e.matchType === 'IDENTICAL' ? 'tag-identical' : e.matchType === 'SIMILAR' ? 'tag-similar' : 'tag-nomatch';
+    const matchLabel = e.matchType === 'IDENTICAL' ? '동종매칭' : e.matchType === 'SIMILAR' ? `유사매칭→${e.matchedConnum}` : '매칭없음';
+    const saleTag = e.saleu === 'EP' ? 'tag-ep' : 'tag-cep';
+    const dmTag = e.DM > 0 ? 'tag-dumping' : 'tag-nodumping';
+    const dmLabel = e.DM > 0 ? 'DUMPING' : 'NO DUMPING';
+
+    html += `<div class="result-card">
+      <div class="result-card-head">
+        <span>${e.connumu}</span>
+        <span>
+          <span class="tag ${saleTag}">${e.saleu}</span>
+          <span class="tag ${matchTag}">${matchLabel}</span>
+          <span class="tag ${dmTag}">${dmLabel}</span>
+        </span>
+      </div>
+      <div class="result-card-body">`;
+
+    // Export price chain
+    if (e.saleu === 'EP') {
+      html += `<div class="calc-chain">
+        <b>수출공장도단가 (Net US Price - EP)</b><br>
+        <span class="label">USNETPRI</span> = USGUP + USGUPADJ - USDOMMOVE - USINTLMOVE<br>
+        = <span class="val">${fmt(e.USGUP)}</span> <span class="op">+</span> <span class="val">${fmt(e.USGUPADJ)}</span>
+        <span class="op">-</span> <span class="val">${fmt(e.USDOMMOVE)}</span> <span class="op">-</span> <span class="val">${fmt(e.USINTLMOVE)}</span>
+        = <span class="result">${fmt(e.USNETPRI)}</span> USD/MT
+      </div>`;
+    } else {
+      html += `<div class="calc-chain">
+        <b>수출공장도단가 (Net US Price - CEP)</b><br>
+        <span class="label">USDIRSELL</span> = CREDITU + INVCARU + BANKCHARU + DIRSELU = <span class="val">${fmt(e.USDIRSELL)}</span><br>
+        <span class="label">USINDSELL</span> = INDIRSU = <span class="val">${fmt(e.USINDSELL)}</span><br>
+        <span class="label">CEPProfit</span> = (USDIRSELL + USINDSELL) x CEPProfitRatio = <span class="val">${fmt(e.CEPProfit)}</span><br>
+        <span class="label">USNETPRI</span> = USGUP + USGUPADJ - USDOMMOVE - USINTLMOVE - USDIRSELL - USINDSELL - CEPProfit<br>
+        = <span class="val">${fmt(e.USGUP)}</span> <span class="op">+</span> <span class="val">${fmt(e.USGUPADJ)}</span>
+        <span class="op">-</span> <span class="val">${fmt(e.USDOMMOVE)}</span> <span class="op">-</span> <span class="val">${fmt(e.USINTLMOVE)}</span>
+        <span class="op">-</span> <span class="val">${fmt(e.USDIRSELL)}</span> <span class="op">-</span> <span class="val">${fmt(e.USINDSELL)}</span>
+        <span class="op">-</span> <span class="val">${fmt(e.CEPProfit)}</span>
+        = <span class="result">${fmt(e.USNETPRI)}</span> USD/MT
+      </div>`;
+    }
+
+    // NV chain
+    let nvDetail = '';
+    if (e.matchedHM) {
+      if (e.matchedHM.OCTTResult === 'Pass') {
+        nvDetail = `OCT Pass → <span class="label">NVBasis</span> = CMNETPRI(${e.matchedConnum}) = <span class="val">${fmt(e.NVBasis)}</span>`;
+      } else {
+        nvDetail = `OCT Fail → <span class="label">NVBasis</span> = CV(${e.connumu}) = <span class="val">${fmt(e.NVBasis)}</span>`;
+      }
+    } else {
+      nvDetail = `매칭없음 → <span class="label">NVBasis</span> = CV(${e.connumu}) = <span class="val">${fmt(e.NVBasis)}</span>`;
+    }
+
+    let adjDetail = '';
+    if (e.NVEPAdj !== 0) {
+      adjDetail += `<br><span class="label">EP Adj (COS Credit)</span> = <span class="op">+</span> <span class="val">${fmt(e.NVEPAdj)}</span>`;
+    }
+    if (e.NVSIMAdj !== 0) {
+      adjDetail += `<br><span class="label">유사품 조정 (DIFMER)</span> = <span class="op">${e.NVSIMAdj >= 0 ? '+' : ''}</span><span class="val">${fmt(e.NVSIMAdj)}</span>`;
+    }
+    if (e.matchType === 'SIMILAR') {
+      adjDetail += `<br><span class="label" style="font-size:0.75rem">  DIFMER = VCOM(${e.connumu}) - VCOM(${e.matchedConnum}) = ${fmt(e.DIFMER)}, DIFFRatio = ${fmtPct(e.DIFFRatio)}, Test = ${e.DIFFMERT}</span>`;
+    }
+
+    html += `<div class="calc-chain">
+      <b>정상가치 (Normal Value)</b><br>
+      ${nvDetail}${adjDetail}<br>
+      <span class="label">NV</span> = <span class="val">${fmt(e.NVBasis)}</span>${e.NVEPAdj ? ` <span class="op">+</span> <span class="val">${fmt(e.NVEPAdj)}</span>` : ''}${e.NVSIMAdj ? ` <span class="op">${e.NVSIMAdj >= 0 ? '+' : ''}</span><span class="val">${fmt(e.NVSIMAdj)}</span>` : ''}
+      = <span class="result">${fmt(e.NV)}</span> USD/MT
+    </div>`;
+
+    // DM
+    html += `<div class="calc-chain">
+      <b>덤핑마진 (Dumping Margin)</b><br>
+      <span class="label">DM</span> = NV - USNETPRI = <span class="val">${fmt(e.NV)}</span> <span class="op">-</span> <span class="val">${fmt(e.USNETPRI)}</span>
+      = <span class="result">${fmt(e.DM)}</span> USD/MT<br>
+      <span class="label">DM Ratio</span> = ${fmt(e.DM)} / ${fmt(e.USNETPRI)} = <span class="result">${fmtPct(e.DMRatio)}</span><br>
+      <span class="label">Zeroing 후</span> = <span class="result">${fmt(e.DMZeroing)}</span> USD/MT
+    </div>`;
+
+    html += `</div></div>`;
+  });
+
+  // --- Summary Table ---
+  html += `<div class="result-card">
+    <div class="result-card-head" style="background:var(--primary);color:white;">최종 요약 (Final Summary)</div>
+    <div class="result-card-body"><div class="table-wrap">
+    <table class="summary-table"><thead><tr>
+      <th>CONNUM</th><th>Type</th><th>Match</th><th>QTY</th><th>USNETPRI</th><th>NV</th>
+      <th>DM</th><th>DM Ratio</th><th>Zeroing</th><th>DM x QTY</th><th>결과</th>
+    </tr></thead><tbody>`;
+  exps.forEach(e => {
+    const dmTag = e.DM > 0 ? 'tag-dumping' : 'tag-nodumping';
+    html += `<tr>
+      <td><b>${e.connumu}</b></td><td>${e.saleu}</td>
+      <td>${e.matchType === 'IDENTICAL' ? '동종' : e.matchType === 'SIMILAR' ? '유사→'+e.matchedConnum : '-'}</td>
+      <td>${fmt(e.qtyu,0)}</td><td>${fmt(e.USNETPRI)}</td><td>${fmt(e.NV)}</td>
+      <td>${fmt(e.DM)}</td><td>${fmtPct(e.DMRatio)}</td><td>${fmt(e.DMZeroing)}</td>
+      <td>${fmt(e.DMZeroing * e.qtyu)}</td>
+      <td><span class="tag ${dmTag}">${e.DMResult}</span></td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  // WADM box
+  html += `<div class="wadm-box">
+    <div class="wadm-label">Weighted Average Dumping Margin (가중평균 덤핑마진율)</div>
+    <div class="wadm-value">${fmtPct(WADM)}</div>
+    <div class="wadm-detail">
+      총 덤핑금액(TOTDA) = ${fmt(TOTDA)} USD &nbsp;/&nbsp; 총 수출금액(TOTSV) = ${fmt(TOTSV)} USD
+    </div>
+  </div>`;
+
+  html += `</div></div>`;
+
+  el.innerHTML = html;
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// === Init ===
+window.addEventListener('DOMContentLoaded', () => {
+  defaultCost.forEach(d => addCostRow(d));
+  defaultHm.forEach(d => addHmRow(d));
+  defaultExport.forEach(d => addExportRow(d));
+});
+</script>
 </body>
 </html>
